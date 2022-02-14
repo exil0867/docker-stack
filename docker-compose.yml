@@ -105,3 +105,32 @@ services:
       - "GID=${DOCKER_PGID}"
       - "TZ=${TZ}"
     restart: unless-stopped
+  jackett:
+    container_name: jackett
+    image: linuxserver/jackett:latest
+    restart: unless-stopped
+    ports:
+      - 9117:9117
+    environment:
+      - PUID=${WWW-DATA-PUID}
+      - PGID=${WWW-DATA-PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/docker/nextcloud-local/torrent-blackhole:/downloads
+      - /home/docker/docker-config/jackett:/config
+  sonarr:
+    container_name: sonarr
+    image: linuxserver/sonarr:latest
+    restart: unless-stopped
+    ports:
+      - 8989:8989
+    environment:
+      - PUID=${WWW-DATA-PUID}
+      - PGID=${WWW-DATA-PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/docker/docker-config/sonarr:/config
+      - /home/docker/nextcloud-local/downbox/htpc/TV\ Shows:/tv
+      - /home/docker/nextcloud-local/downbox:/downloads

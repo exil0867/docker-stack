@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  nextcloud:
+    depends_on:
+      - postgres
+    container_name: nextcloud
+    image: nextcloud
+    restart: always
+    ports:
+      - 8083:80
+    volumes:
+      - /home/docker/docker-config/nextcloud/app:/var/www/html
+      - /home/docker/nextcloud-local:/nextcloud-local
+    environment:
+      - "PUID=${DOCKER_PUID}"
+      - "PGID=${DOCKER_PGID}"
+      - "TZ=${TZ}"
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=nextcloud
+      - "POSTGRES_USER=${NEXTCLOUD_PG_USER}"
+      - "POSTGRES_PASSWORD=${NEXTCLOUD_PG_PASSWORD}"
+      - "NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}"
+      - "NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}"
+      - "NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}"
+      - OVERWRITEPROTOCOL=https
+  postgres:
+    container_name: nextcloud-db
+    image: postgres
+    restart: always
+    volumes:
+      - /home/docker/docker-config/nextcloud/db:/var/lib/postgresql/data
+    environment:
+      - "PUID=${DOCKER_PUID}"
+      - "PGID=${DOCKER_PGID}"
+      - "TZ=${TZ}"
+      - "POSTGRES_PASSWORD=${NEXTCLOUD_PG_PASSWORD}"
+      - POSTGRES_DB=nextcloud
+      - "POSTGRES_USER=${NEXTCLOUD_PG_USER}"
+  nginx-proxy-manager:
+    container_name: nginx-proxy-manager
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    environment:
+      - "PUID=${DOCKER_PUID}"
+      - "PGID=${DOCKER_PGID}"
+      - "TZ=${TZ}"
+    ports:
+      - '80:80'
+      - '443:443'
+      - '8801:81'
+    volumes:
+      - /home/docker/docker-config/nginx-proxy-manager/data:/data
+      - /home/docker/docker-config/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+  aria2:
+    container_name: aria2
+    image: p3terx/aria2-pro
+    environment:
+      - "PUID=${WWW_DATA_PGID}"
+      - "PGID=${WWW_DATA_PUID}"
+      - "TZ=${TZ}"
+      - UMASK_SET=022
+      - "RPC_SECRET=${ARIA2_RPC_SECRET}"
+      - RPC_PORT=6800
+      - LISTEN_PORT=6888
+      - DISK_CACHE=64M
+      - IPV6_MODE=false
+      - UPDATE_TRACKERS=true
+      - CUSTOM_TRACKER_URL=
+    volumes:
+      - /home/docker/docker-config/aria2:/config
+      - /home/docker/nextcloud-local/downbox:/downloads
+    ports:
+      - 6800:6800
+      - 6888:6888
+      - 6888:6888/udp
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 1m
+  ariang:
+    container_name: ariang
+    image: p3terx/ariang
+    ports:
+      - 6880:6880
+    environment:
+      - "PUID=${DOCKER_PUID}"
+      - "PGID=${DOCKER_PGID}"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 1m
+  homer:
+    image: b4bz/homer
+    container_name: homer
+    volumes:
+      - /home/docker/docker-config/homer/assets/:/www/assets
+    ports:
+      - 8080:8080
+    environment:
+      - "PUID=${DOCKER_PUID}"
+      - "PGID=${DOCKER_PGID}"
+    restart: unless-stopped

@@ -87,6 +87,7 @@ services:
     environment:
       - "PUID=${DOCKER_PUID}"
       - "PGID=${DOCKER_PGID}"
+      - "TZ=${TZ}"
     restart: unless-stopped
     logging:
       driver: json-file
@@ -102,4 +103,5 @@ services:
     environment:
       - "PUID=${DOCKER_PUID}"
       - "PGID=${DOCKER_PGID}"
+      - "TZ=${TZ}"
     restart: unless-stopped
